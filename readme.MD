@@ -21,6 +21,8 @@
 ### 2. map
 
 1. for rendering job description and amount
+2. for getting dates
+3. gettign ammount from an array of object
 
 ## React Hooks
 
@@ -33,3 +35,6 @@
 
 1. npm i react-native-chart-kit
 2. npm i react-native-svg
+3. npm i moment
+
+## React Native Navigation

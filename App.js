@@ -11,10 +11,23 @@ import {
   Dimensions,
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
+import moment from "moment";
 
 function App() {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [data, setData] = useState([
+    { date: moment().format("LL"), amount: 2000 },
+    { date: moment().format("LL"), amount: 1000 },
+    { date: moment().subtract(1, "days").format("LL"), amount: 2500 },
+    { date: moment().subtract(1, "days").format("LL"), amount: 2500 },
+    { date: moment().subtract(1, "days").format("LL"), amount: 2500 },
+    { date: moment().subtract(1, "days").format("LL"), amount: 2500 },
+    { date: moment().subtract(2, "days").format("LL"), amount: 2800 },
+    { date: moment().subtract(3, "days").format("LL"), amount: 3000 },
+    { date: moment().subtract(4, "days").format("LL"), amount: 400 },
+  ]);
   const [gigs, setGigs] = useState([
     {
       description: "freelance job in fiverr",
@@ -23,7 +36,47 @@ function App() {
     },
   ]);
 
-  const [total, setTotal] = useState(0);
+  const [transformedData, setTransformedData] = useState([]);
+
+  useEffect(() => {
+    setTransformedData(transformData(groupBy(data, "date")));
+  }, [data]);
+
+  const transformData = (groupedData) => {
+    const transformedArray = [];
+
+    Object.entries(groupedData).forEach((entry) => {
+      const total = entry[1].reduce(
+        (previousValue, currentValue) => previousValue + currentValue.amount,
+        0
+      );
+      transformedArray.push({
+        date: moment(entry[0]).format("DD/MM"),
+        amount: total,
+      });
+    });
+
+    const sortedArray = transformedArray.sort((a, b) =>
+      moment(a["date"]).diff(moment(b["date"]))
+    );
+
+    return sortedArray;
+  };
+
+  const groupBy = (array, key) =>
+    array.reduce((rv, x) => {
+      (rv[x[key]] = rv[x[key]] || []).push(x);
+      return rv;
+    }, {});
+
+  const getDates = () => transformedData.map((pair) => pair.date);
+  const getAmounts = () => transformedData.map((pair) => pair.amount);
+
+  console.log("debug", data);
+  console.log("The Date", getDates());
+  console.log("The Amount", getAmounts());
+  console.log("The Grouped Value", Object.entries(groupBy(data, "date")));
+  console.log("Total Grouped Value", transformData(groupBy(data, "date")));
 
   useEffect(() => {
     const total = gigs.reduce((total, gig) => total + Number(gig.amount), 0);
@@ -44,6 +97,14 @@ function App() {
       },
     ]);
 
+    setData([
+      ...data,
+      {
+        date: moment().format("LL"),
+        amount: Number(amount),
+      },
+    ]);
+
     setDescription("");
     setAmount("");
   };
@@ -59,22 +120,17 @@ function App() {
         <Text>Bezier Line Chart</Text>
         <LineChart
           data={{
-            labels: ["27/10/2020", "28/10/2020", "29/10/2020", "30/10/2020"],
+            labels: getDates(),
             datasets: [
               {
-                data: [
-                  Math.random() * 100,
-                  Math.random() * 100,
-                  Math.random() * 100,
-                  Math.random() * 100,
-                ],
+                data: getAmounts(),
               },
             ],
           }}
           width={Dimensions.get("window").width} // from react-native
           height={220}
           yAxisLabel="$"
-          yAxisSuffix="k"
+          // yAxisSuffix="k"
           yAxisInterval={1} // optional, defaults to 1
           chartConfig={{
             backgroundColor: "orange",
